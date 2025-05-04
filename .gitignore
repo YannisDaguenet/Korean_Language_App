@@ -1,0 +1,8 @@
+
+*.xml
+*.csv
+*.zip
+*.tar.gz
+__pycache__/
+*.pyc
+*.vscode/
