@@ -1,6 +1,5 @@
 
 *.xml
-*.csv
 *.zip
 *.tar.gz
 __pycache__/
