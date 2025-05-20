@@ -103,11 +103,26 @@ known_button.on_click(on_known_clicked)
 unknown_button.on_click(on_unknown_clicked)
 quit_button.on_click(on_quit_clicked)
 
-# ✅ Start interface
-if tokens:
+def launch_review(callback=None):
+    global index, reviewed
+    index = 0
+    reviewed = 0
+
+    if not tokens:
+        print("🎉 All tokens have already been reviewed!")
+        return
+
+    def finish_review_and_return():
+        finish_review()
+        if callback:
+            callback()
+
+    def on_quit_clicked_modified(b):
+        finish_review_and_return()
+
+    quit_button.on_click(on_quit_clicked_modified)
     display(display_box)
     update_display()
-else:
-    print("🎉 All tokens have already been reviewed!")
 
+launch_review()
 # %%

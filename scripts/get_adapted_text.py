@@ -73,8 +73,8 @@ for label, count in coverage_distribution.items():
 
 # Optional: Show as bar chart with timeout fallback
 import time
-import matplotlib
-matplotlib.use('Agg')  # Prevent backend errors in some headless environments
+if not hasattr(plt, 'get_backend') or 'inline' not in plt.get_backend().lower():
+    plt.use('Agg')  # Safe fallback for non-notebook environments
 
 def attempt_plot():
     try:
@@ -204,9 +204,16 @@ def save_all():
     save_json_set(unknown_words, unknown_path)
     save_json_set(seen_sentences, seen_path)
 
-# 🚀 Launch the app
-if not eligible_df.empty:
+def launch_adapted_reader(fallback=None):
+    global index
+    index = 0
+
+    if eligible_df.empty:
+        print("😕 No eligible sentence blocks found. Try learning more words first.")
+        if fallback:
+            fallback()
+        return
+
     review_block()
-else:
-    print("😕 No eligible sentence blocks found. Try learning more words first.")
-# %%
+
+launch_adapted_reader()
