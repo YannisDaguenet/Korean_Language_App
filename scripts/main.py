@@ -1,3 +1,4 @@
+# %%
 # main.py - Full interactive notebook workflow for Korean learning
 
 import json
@@ -19,6 +20,7 @@ for d in [JSON_DIR, CONTENT_DIR, VOCAB_DIR]:
 def launch_article_selector():
     import pandas as pd
     csv_file = CONTENT_DIR / "wikipedia_korean_articles_cleaned.csv"
+    print("🔍 Looking for CSV at:", csv_file.resolve())
     if not csv_file.exists():
         raise FileNotFoundError(f"CSV not found: {csv_file}")
 
@@ -97,3 +99,5 @@ def choose_next_action():
 
 # --- Launch ---
 launch_article_selector()
+
+# %%
