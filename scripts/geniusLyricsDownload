@@ -1,0 +1,75 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+import json
+
+GENIUS_TOKEN = "6-Fkazz2WVrsW6oG0OZSNsmTU8d1-86i6PRTWN8xpMliL2KROenDvqfsXVlmv9MD"
+BASE_URL = "https://api.genius.com"
+headers = {'Authorization': f'Bearer {GENIUS_TOKEN}'}
+
+def search_song(query):
+    search_url = f"{BASE_URL}/search"
+    params = {'q': query}
+    response = requests.get(search_url, headers=headers, params=params)
+    data = response.json()
+    return data['response']['hits']
+
+def get_song_details(song_id):
+    song_url = f"{BASE_URL}/songs/{song_id}"
+    response = requests.get(song_url, headers=headers)
+    return response.json()
+
+def scrape_lyrics_from_url(url):
+    page = requests.get(url)
+    html = BeautifulSoup(page.text, "html.parser")
+    lyrics_divs = html.find_all("div", class_=lambda x: x and "Lyrics__Container" in x)
+    lyrics_lines = []
+    for div in lyrics_divs:
+        text = div.get_text(separator="\n").strip()
+        for line in text.splitlines():
+            # Skip contributor lines, header lines, bracketed section names
+            if (re.match(r"^\d+\sContributors?$", line) or 
+                line.endswith(" Lyrics") or 
+                re.match(r"^\[.*\]$", line)):
+                continue
+            # Only keep lines with Korean or English
+            if re.search(r"[가-힣]", line) or re.search(r"[a-zA-Z]", line):
+                lyrics_lines.append(line)
+    if not lyrics_lines:
+        return "Lyrics not found."
+    return "\n".join(lyrics_lines)
+
+
+# === MAIN ===
+artist_name = "박소은"
+results = []
+
+print(f"Searching for songs by {artist_name}...")
+korean_hits = search_song(artist_name)
+
+for hit in korean_hits:
+    song = hit['result']
+    title = song['full_title']
+    song_id = song['id']
+    print(f"Fetching: {title}")
+
+    song_details = get_song_details(song_id)
+    song_url = song_details['response']['song']['url']
+    artist = song_details['response']['song']['primary_artist']['name']
+
+    lyrics = scrape_lyrics_from_url(song_url)
+    print(f"→ Got lyrics for {title}\n")
+
+    results.append({
+        "Artist": artist,
+        "Song Name": title,
+        "URL": song_url,
+        "Lyrics": lyrics
+    })
+
+# === WRITE TO JSON ===
+json_filename = f"data/content{artist_name}_lyrics.json"
+with open(json_filename, mode='w', encoding='utf-8') as file:
+    json.dump(results, file, ensure_ascii=False, indent=2)
+
+print(f"\n✅ Done! Saved lyrics data to: {json_filename}")
